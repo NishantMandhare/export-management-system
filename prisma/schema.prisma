@@ -20,6 +20,37 @@ enum Role {
   FINANCE
 }
 
+enum ProductType {
+  PERISHABLE
+  NON_PERISHABLE
+}
+
+enum PackingType {
+  LOOSE
+  PACKED
+}
+
+enum OrderStatus {
+  DRAFT
+  CONFIRMED
+  PACKED
+  SHIPPED
+  DELIVERED
+  CLOSED
+}
+
+enum ContainerStatus {
+  CREATED
+  PACKED
+  LOADED
+  SHIPPED
+  ARRIVED
+  CUSTOMS_CLEARANCE
+  WAREHOUSE
+  SALES_STARTED
+  COMPLETED
+}
+
 model User {
   id        String   @id @default(cuid())
   name      String
@@ -28,4 +59,154 @@ model User {
   role      Role     @default(OPERATIONS)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  exporters Exporter[]
+}
+
+
+model Exporter {
+  id              String   @id @default(cuid())
+  companyName     String
+  country         String
+  currency        String
+  commissionPct   Float
+  profitMarginPct Float
+  vatPct          Float
+  paymentTerms    String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+
+  products Product[]
+  orders Order[]
+}
+
+
+model Product {
+  id                   String      @id @default(cuid())
+  name                 String
+  type                 ProductType
+  packingType          PackingType
+  unit                 String
+  defaultPrice         Float
+  defaultCost          Float
+  quantityPerContainer Float
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  exporterId String
+  exporter   Exporter @relation(fields: [exporterId], references: [id])
+
+  orderItems OrderItem[]
+}
+  
+
+model Order {
+  id                   String      @id @default(cuid())
+  orderNumber          String      @unique
+  currency             String
+  expectedShippingDate DateTime
+  status               OrderStatus @default(DRAFT)
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  exporterId String
+  exporter   Exporter @relation(fields: [exporterId], references: [id])
+
+  items OrderItem[]
+}
+
+model OrderItem {
+  id           String @id @default(cuid())
+  quantity     Float
+  sellingPrice Float
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  containerItems ContainerItem[]
+}
+
+
+model Container {
+  id              String          @id @default(cuid())
+  containerNumber String          @unique
+  blNumber        String
+  containerSize   String
+  status          ContainerStatus @default(CREATED)
+  documentUrl     String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  items ContainerItem[]
+
+  expense ContainerExpense?
+
+  salesEntries SalesEntry[]
+
+  settlement   Settlement?
+}
+
+model ContainerItem {
+  id               String @id @default(cuid())
+  quantityAssigned Float
+
+  containerId String
+  container   Container @relation(fields: [containerId], references: [id])
+
+  orderItemId String
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id])
+}
+
+
+model ContainerExpense {
+  id              String   @id @default(cuid())
+  freight         Float
+  customs         Float
+  warehouse       Float
+  parking         Float
+  hamali          Float
+  transport       Float
+  otherExpenses   Float
+  commissionPct   Float
+  profitMarginPct Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  containerId String    @unique
+  container   Container @relation(fields: [containerId], references: [id])
+}
+
+
+model SalesEntry {
+  id           String   @id @default(cuid())
+  quantitySold Float
+  sellingRate  Float
+  saleDate     DateTime
+  createdAt    DateTime @default(now())
+
+  containerId String
+  container   Container @relation(fields: [containerId], references: [id])
+}
+
+
+model Settlement {
+  id                  String   @id @default(cuid())
+  remainingQuantity   Float
+  damagedQuantity     Float
+  averageSellingPrice Float
+  totalSales          Float
+  totalExpenses       Float
+  totalCommission     Float
+  netSettlement       Float
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  containerId String    @unique
+  container   Container @relation(fields: [containerId], references: [id])
 }
