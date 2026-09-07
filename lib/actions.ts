@@ -21,7 +21,7 @@ export async function loginAction(
     }
 }
 
-import { exporterSchema } from "@/lib/schemas";
+import { exporterSchema, productSchema } from "@/lib/schemas";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -109,4 +109,88 @@ export async function deleteExporterAction(id: string) {
     });
 
     redirect("/exporters");
+}
+
+export async function createProductAction(
+    prevState: string | undefined,
+    formData: FormData
+): Promise<string | undefined> {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        return "You must be logged in.";
+    }
+
+    const result = productSchema.safeParse({
+        name: formData.get("name"),
+        type: formData.get("type"),
+        packingType: formData.get("packingType"),
+        unit: formData.get("unit"),
+        defaultPrice: formData.get("defaultPrice"),
+        defaultCost: formData.get("defaultCost"),
+        quantityPerContainer: formData.get("quantityPerContainer"),
+        exporterId: formData.get("exporterId"),
+    });
+
+    if (!result.success) {
+        return result.error.issues[0].message;
+    }
+
+    await prisma.product.create({
+        data: result.data,
+    });
+
+    redirect("/products");
+}
+
+export async function updateProductAction(
+    id: string,
+    prevState: string | undefined,
+    formData: FormData
+): Promise<string | undefined> {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        return "You must be logged in.";
+    }
+
+    const result = productSchema.safeParse({
+        name: formData.get("name"),
+        type: formData.get("type"),
+        packingType: formData.get("packingType"),
+        unit: formData.get("unit"),
+        defaultPrice: formData.get("defaultPrice"),
+        defaultCost: formData.get("defaultCost"),
+        quantityPerContainer: formData.get("quantityPerContainer"),
+        exporterId: formData.get("exporterId"),
+    });
+
+    if (!result.success) {
+        return result.error.issues[0].message;
+    }
+
+    await prisma.product.update({
+        where: { id },
+        data: result.data,
+    });
+
+    redirect("/products");
+}
+
+export async function deleteProductAction(id: string) {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        throw new Error("You must be logged in.");
+    }
+
+    if (session.user.role !== "ADMIN" && session.user.role !== "MANAGER") {
+        throw new Error("You don't have permission to delete products.");
+    }
+
+    await prisma.product.delete({
+        where: { id },
+    });
+
+    redirect("/products");
 }
