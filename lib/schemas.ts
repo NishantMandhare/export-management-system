@@ -20,3 +20,17 @@ export const productSchema = z.object({
     quantityPerContainer: z.coerce.number().min(0),
     exporterId: z.string().min(1, "Please select an exporter"),
 });
+
+export const orderItemSchema = z.object({
+    productId: z.string().min(1, "Please select a product"),
+    quantity: z.coerce.number().min(0.01, "Quantity must be greater than 0"),
+    sellingPrice: z.coerce.number().min(0, "Selling price cannot be negative"),
+});
+
+export const orderSchema = z.object({
+    orderNumber: z.string().min(2, "Order number is required"),
+    exporterId: z.string().min(1, "Please select an exporter"),
+    currency: z.string().min(3, "Currency is required"),
+    expectedShippingDate: z.coerce.date(),
+    items: z.array(orderItemSchema).min(1, "Add at least one product"),
+});

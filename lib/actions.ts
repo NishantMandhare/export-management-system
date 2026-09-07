@@ -21,7 +21,7 @@ export async function loginAction(
     }
 }
 
-import { exporterSchema, productSchema } from "@/lib/schemas";
+import { exporterSchema, productSchema, orderSchema } from "@/lib/schemas";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -193,4 +193,48 @@ export async function deleteProductAction(id: string) {
     });
 
     redirect("/products");
+}
+
+export async function createOrderAction(
+    prevState: string | undefined,
+    formData: FormData
+): Promise<string | undefined> {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        return "You must be logged in.";
+    }
+
+    const itemsRaw = formData.get("items") as string;
+    let items;
+    try {
+        items = JSON.parse(itemsRaw);
+    } catch {
+        return "Invalid product items.";
+    }
+
+    const result = orderSchema.safeParse({
+        orderNumber: formData.get("orderNumber"),
+        exporterId: formData.get("exporterId"),
+        currency: formData.get("currency"),
+        expectedShippingDate: formData.get("expectedShippingDate"),
+        items,
+    });
+
+    if (!result.success) {
+        return result.error.issues[0].message;
+    }
+
+    const { items: orderItems, ...orderData } = result.data;
+
+    await prisma.order.create({
+        data: {
+            ...orderData,
+            items: {
+                create: orderItems,
+            },
+        },
+    });
+
+    redirect("/orders");
 }
