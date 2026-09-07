@@ -59,3 +59,54 @@ export async function createExporterAction(
 
     redirect("/exporters");
 }
+
+export async function updateExporterAction(
+    id: string,
+    prevState: string | undefined,
+    formData: FormData
+): Promise<string | undefined> {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        return "You must be logged in.";
+    }
+
+    const result = exporterSchema.safeParse({
+        companyName: formData.get("companyName"),
+        country: formData.get("country"),
+        currency: formData.get("currency"),
+        commissionPct: formData.get("commissionPct"),
+        profitMarginPct: formData.get("profitMarginPct"),
+        vatPct: formData.get("vatPct"),
+        paymentTerms: formData.get("paymentTerms"),
+    });
+
+    if (!result.success) {
+        return result.error.issues[0].message;
+    }
+
+    await prisma.exporter.update({
+        where: { id },
+        data: result.data,
+    });
+
+    redirect("/exporters");
+}
+
+export async function deleteExporterAction(id: string) {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        throw new Error("You must be logged in.");
+    }
+
+    if (session.user.role !== "ADMIN" && session.user.role !== "MANAGER") {
+        throw new Error("You don't have permission to delete exporters.");
+    }
+
+    await prisma.exporter.delete({
+        where: { id },
+    });
+
+    redirect("/exporters");
+}

@@ -6,6 +6,7 @@ async function main() {
     const email = process.argv[2];
     const password = process.argv[3];
     const name = process.argv[4];
+    const role = process.argv[5] || "ADMIN";
 
     if (!email || !password || !name) {
         console.error("Usage: npx tsx create-admin.ts <email> <password> <name>");
@@ -19,7 +20,7 @@ async function main() {
             name,
             email,
             password: hashedPassword,
-            role: "ADMIN",
+            role: role as "ADMIN" | "MANAGER" | "OPERATIONS" | "FINANCE",
         },
     });
 
