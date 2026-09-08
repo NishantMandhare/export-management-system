@@ -58,3 +58,9 @@ export const containerExpenseSchema = z.object({
     commissionPct: z.coerce.number().min(0).max(100),
     profitMarginPct: z.coerce.number().min(0).max(100),
 });
+
+export const salesEntrySchema = z.object({
+    quantitySold: z.coerce.number().min(0.01, "Quantity must be greater than 0"),
+    sellingRate: z.coerce.number().min(0, "Selling rate cannot be negative"),
+    saleDate: z.coerce.date(),
+});

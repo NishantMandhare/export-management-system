@@ -40,12 +40,24 @@ export default async function ContainersPage() {
                                 <td className="p-2">{container.containerSize}</td>
                                 <td className="p-2">{container.items.length}</td>
                                 <td className="p-2">{container.status}</td>
-                                <td className="p-2">
+                                <td className="p-2 space-x-3">
                                     <Link
                                         href={`/containers/${container.id}/expense`}
                                         className="underline"
                                     >
                                         Expense
+                                    </Link>
+                                    <Link
+                                        href={`/containers/${container.id}/sales`}
+                                        className="underline"
+                                    >
+                                        Sales
+                                    </Link>
+                                    <Link
+                                        href={`/containers/${container.id}/settlement`}
+                                        className="underline"
+                                    >
+                                        Settlement
                                     </Link>
                                 </td>
                             </tr>

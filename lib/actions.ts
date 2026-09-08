@@ -21,7 +21,7 @@ export async function loginAction(
     }
 }
 
-import { exporterSchema, productSchema, orderSchema, containerSchema, containerExpenseSchema } from "@/lib/schemas";
+import { exporterSchema, productSchema, orderSchema, containerSchema, containerExpenseSchema, salesEntrySchema } from "@/lib/schemas";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -316,4 +316,101 @@ export async function createContainerExpenseAction(
     });
 
     redirect("/containers");
+}
+
+export async function createSalesEntryAction(
+    containerId: string,
+    prevState: string | undefined,
+    formData: FormData
+): Promise<string | undefined> {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        return "You must be logged in.";
+    }
+
+    const result = salesEntrySchema.safeParse({
+        quantitySold: formData.get("quantitySold"),
+        sellingRate: formData.get("sellingRate"),
+        saleDate: formData.get("saleDate"),
+    });
+
+    if (!result.success) {
+        return result.error.issues[0].message;
+    }
+
+    await prisma.salesEntry.create({
+        data: {
+            ...result.data,
+            containerId,
+        },
+    });
+
+    redirect(`/containers/${containerId}/sales`);
+}
+
+export async function createSettlementAction(containerId: string) {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        throw new Error("You must be logged in.");
+    }
+
+    const container = await prisma.container.findUnique({
+        where: { id: containerId },
+        include: {
+            salesEntries: true,
+            expense: true,
+        },
+    });
+
+    if (!container) {
+        throw new Error("Container not found.");
+    }
+
+    if (!container.expense) {
+        throw new Error("Please add container expenses first.");
+    }
+
+    const totalSales = container.salesEntries.reduce(
+        (sum, entry) => sum + entry.quantitySold * entry.sellingRate,
+        0
+    );
+
+    const totalQuantitySold = container.salesEntries.reduce(
+        (sum, entry) => sum + entry.quantitySold,
+        0
+    );
+
+    const averageSellingPrice =
+        totalQuantitySold > 0 ? totalSales / totalQuantitySold : 0;
+
+    const expense = container.expense;
+    const totalExpenses =
+        expense.freight +
+        expense.customs +
+        expense.warehouse +
+        expense.parking +
+        expense.hamali +
+        expense.transport +
+        expense.otherExpenses;
+
+    const totalCommission = totalSales * (expense.commissionPct / 100);
+
+    const netSettlement = totalSales - totalExpenses - totalCommission;
+
+    await prisma.settlement.create({
+        data: {
+            containerId,
+            remainingQuantity: 0,
+            damagedQuantity: 0,
+            averageSellingPrice,
+            totalSales,
+            totalExpenses,
+            totalCommission,
+            netSettlement,
+        },
+    });
+
+    redirect(`/containers/${containerId}/settlement`);
 }
