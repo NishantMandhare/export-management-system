@@ -46,3 +46,15 @@ export const containerSchema = z.object({
     containerSize: z.string().min(1, "Container size is required"),
     items: z.array(containerItemSchema).min(1, "Add at least one item"),
 });
+
+export const containerExpenseSchema = z.object({
+    freight: z.coerce.number().min(0),
+    customs: z.coerce.number().min(0),
+    warehouse: z.coerce.number().min(0),
+    parking: z.coerce.number().min(0),
+    hamali: z.coerce.number().min(0),
+    transport: z.coerce.number().min(0),
+    otherExpenses: z.coerce.number().min(0),
+    commissionPct: z.coerce.number().min(0).max(100),
+    profitMarginPct: z.coerce.number().min(0).max(100),
+});

@@ -21,7 +21,7 @@ export async function loginAction(
     }
 }
 
-import { exporterSchema, productSchema, orderSchema, containerSchema } from "@/lib/schemas";
+import { exporterSchema, productSchema, orderSchema, containerSchema, containerExpenseSchema } from "@/lib/schemas";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -275,6 +275,43 @@ export async function createContainerAction(
             items: {
                 create: containerItems,
             },
+        },
+    });
+
+    redirect("/containers");
+}
+
+export async function createContainerExpenseAction(
+    containerId: string,
+    prevState: string | undefined,
+    formData: FormData
+): Promise<string | undefined> {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        return "You must be logged in.";
+    }
+
+    const result = containerExpenseSchema.safeParse({
+        freight: formData.get("freight"),
+        customs: formData.get("customs"),
+        warehouse: formData.get("warehouse"),
+        parking: formData.get("parking"),
+        hamali: formData.get("hamali"),
+        transport: formData.get("transport"),
+        otherExpenses: formData.get("otherExpenses"),
+        commissionPct: formData.get("commissionPct"),
+        profitMarginPct: formData.get("profitMarginPct"),
+    });
+
+    if (!result.success) {
+        return result.error.issues[0].message;
+    }
+
+    await prisma.containerExpense.create({
+        data: {
+            ...result.data,
+            containerId,
         },
     });
 

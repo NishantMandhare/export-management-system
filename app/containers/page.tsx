@@ -29,6 +29,7 @@ export default async function ContainersPage() {
                             <th className="p-2">Size</th>
                             <th className="p-2">Items</th>
                             <th className="p-2">Status</th>
+                            <th className="p-2">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -39,6 +40,14 @@ export default async function ContainersPage() {
                                 <td className="p-2">{container.containerSize}</td>
                                 <td className="p-2">{container.items.length}</td>
                                 <td className="p-2">{container.status}</td>
+                                <td className="p-2">
+                                    <Link
+                                        href={`/containers/${container.id}/expense`}
+                                        className="underline"
+                                    >
+                                        Expense
+                                    </Link>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
