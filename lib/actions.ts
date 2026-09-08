@@ -21,7 +21,7 @@ export async function loginAction(
     }
 }
 
-import { exporterSchema, productSchema, orderSchema } from "@/lib/schemas";
+import { exporterSchema, productSchema, orderSchema, containerSchema } from "@/lib/schemas";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -237,4 +237,46 @@ export async function createOrderAction(
     });
 
     redirect("/orders");
+}
+export async function createContainerAction(
+    prevState: string | undefined,
+    formData: FormData
+): Promise<string | undefined> {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        return "You must be logged in.";
+    }
+
+    const itemsRaw = formData.get("items") as string;
+    let items;
+    try {
+        items = JSON.parse(itemsRaw);
+    } catch {
+        return "Invalid container items.";
+    }
+
+    const result = containerSchema.safeParse({
+        containerNumber: formData.get("containerNumber"),
+        blNumber: formData.get("blNumber"),
+        containerSize: formData.get("containerSize"),
+        items,
+    });
+
+    if (!result.success) {
+        return result.error.issues[0].message;
+    }
+
+    const { items: containerItems, ...containerData } = result.data;
+
+    await prisma.container.create({
+        data: {
+            ...containerData,
+            items: {
+                create: containerItems,
+            },
+        },
+    });
+
+    redirect("/containers");
 }

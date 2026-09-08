@@ -34,3 +34,15 @@ export const orderSchema = z.object({
     expectedShippingDate: z.coerce.date(),
     items: z.array(orderItemSchema).min(1, "Add at least one product"),
 });
+
+export const containerItemSchema = z.object({
+    orderItemId: z.string().min(1, "Please select an order item"),
+    quantityAssigned: z.coerce.number().min(0.01, "Quantity must be greater than 0"),
+});
+
+export const containerSchema = z.object({
+    containerNumber: z.string().min(2, "Container number is required"),
+    blNumber: z.string().min(2, "BL number is required"),
+    containerSize: z.string().min(1, "Container size is required"),
+    items: z.array(containerItemSchema).min(1, "Add at least one item"),
+});
