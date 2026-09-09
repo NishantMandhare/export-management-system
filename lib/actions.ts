@@ -1,5 +1,5 @@
 "use server";
-
+import bcrypt from "bcryptjs";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 
@@ -21,7 +21,7 @@ export async function loginAction(
     }
 }
 
-import { exporterSchema, productSchema, orderSchema, containerSchema, containerExpenseSchema, salesEntrySchema } from "@/lib/schemas";
+import { exporterSchema, productSchema, orderSchema, containerSchema, containerExpenseSchema, salesEntrySchema, userSchema } from "@/lib/schemas";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -631,4 +631,50 @@ export async function deleteContainerAction(id: string) {
     }
 
     redirect("/containers");
+}
+export async function createUserAction(
+    prevState: string | undefined,
+    formData: FormData
+): Promise<string | undefined> {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        return "You must be logged in.";
+    }
+
+    if (session.user.role !== "ADMIN") {
+        return "Only Admins can create new users.";
+    }
+
+    const result = userSchema.safeParse({
+        name: formData.get("name"),
+        email: formData.get("email"),
+        password: formData.get("password"),
+        role: formData.get("role"),
+    });
+
+    if (!result.success) {
+        return result.error.issues[0].message;
+    }
+
+    const existingUser = await prisma.user.findUnique({
+        where: { email: result.data.email },
+    });
+
+    if (existingUser) {
+        return "A user with this email already exists.";
+    }
+
+    const hashedPassword = await bcrypt.hash(result.data.password, 10);
+
+    await prisma.user.create({
+        data: {
+            name: result.data.name,
+            email: result.data.email,
+            password: hashedPassword,
+            role: result.data.role,
+        },
+    });
+
+    redirect("/users");
 }
