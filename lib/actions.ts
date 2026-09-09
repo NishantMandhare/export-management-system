@@ -414,3 +414,221 @@ export async function createSettlementAction(containerId: string) {
 
     redirect(`/containers/${containerId}/settlement`);
 }
+
+export async function updateOrderAction(
+    orderId: string,
+    prevState: string | undefined,
+    formData: FormData
+): Promise<string | undefined> {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        return "You must be logged in.";
+    }
+
+    const itemsRaw = formData.get("items") as string;
+    let items: { id?: string; productId: string; quantity: string; sellingPrice: string }[];
+    try {
+        items = JSON.parse(itemsRaw);
+    } catch {
+        return "Invalid product items.";
+    }
+
+    const orderNumber = formData.get("orderNumber") as string;
+    const currency = formData.get("currency") as string;
+    const expectedShippingDate = formData.get("expectedShippingDate") as string;
+
+    if (!orderNumber || !currency || !expectedShippingDate) {
+        return "Please fill in all order fields.";
+    }
+
+    if (items.length === 0) {
+        return "Add at least one product.";
+    }
+
+    const existingItems = await prisma.orderItem.findMany({
+        where: { orderId },
+    });
+
+    const submittedIds = items.filter((i) => i.id).map((i) => i.id as string);
+    const idsToDelete = existingItems
+        .filter((i) => !submittedIds.includes(i.id))
+        .map((i) => i.id);
+
+    try {
+        await prisma.$transaction([
+            prisma.order.update({
+                where: { id: orderId },
+                data: {
+                    orderNumber,
+                    currency,
+                    expectedShippingDate: new Date(expectedShippingDate),
+                },
+            }),
+            ...(idsToDelete.length > 0
+                ? [prisma.orderItem.deleteMany({ where: { id: { in: idsToDelete } } })]
+                : []),
+            ...items
+                .filter((i) => i.id)
+                .map((i) =>
+                    prisma.orderItem.update({
+                        where: { id: i.id },
+                        data: {
+                            productId: i.productId,
+                            quantity: Number(i.quantity),
+                            sellingPrice: Number(i.sellingPrice),
+                        },
+                    })
+                ),
+            ...items
+                .filter((i) => !i.id)
+                .map((i) =>
+                    prisma.orderItem.create({
+                        data: {
+                            orderId,
+                            productId: i.productId,
+                            quantity: Number(i.quantity),
+                            sellingPrice: Number(i.sellingPrice),
+                        },
+                    })
+                ),
+        ]);
+    } catch {
+        return "Could not update order. It may be linked to a container.";
+    }
+
+    redirect("/orders");
+}
+
+export async function deleteOrderAction(id: string) {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        throw new Error("You must be logged in.");
+    }
+
+    if (session.user.role !== "ADMIN" && session.user.role !== "MANAGER") {
+        throw new Error("You don't have permission to delete orders.");
+    }
+
+    try {
+        await prisma.order.delete({
+            where: { id },
+        });
+    } catch {
+        throw new Error(
+            "Could not delete order. It may be linked to a container."
+        );
+    }
+
+    redirect("/orders");
+}
+
+export async function updateContainerAction(
+    containerId: string,
+    prevState: string | undefined,
+    formData: FormData
+): Promise<string | undefined> {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        return "You must be logged in.";
+    }
+
+    const itemsRaw = formData.get("items") as string;
+    let items: {
+        id?: string;
+        orderItemId: string;
+        quantityAssigned: string;
+    }[];
+    try {
+        items = JSON.parse(itemsRaw);
+    } catch {
+        return "Invalid container items.";
+    }
+
+    const containerNumber = formData.get("containerNumber") as string;
+    const blNumber = formData.get("blNumber") as string;
+    const containerSize = formData.get("containerSize") as string;
+
+    if (!containerNumber || !blNumber || !containerSize) {
+        return "Please fill in all container fields.";
+    }
+
+    if (items.length === 0) {
+        return "Add at least one item.";
+    }
+
+    const existingItems = await prisma.containerItem.findMany({
+        where: { containerId },
+    });
+
+    const submittedIds = items.filter((i) => i.id).map((i) => i.id as string);
+    const idsToDelete = existingItems
+        .filter((i) => !submittedIds.includes(i.id))
+        .map((i) => i.id);
+
+    try {
+        await prisma.$transaction([
+            prisma.container.update({
+                where: { id: containerId },
+                data: { containerNumber, blNumber, containerSize },
+            }),
+            ...(idsToDelete.length > 0
+                ? [
+                    prisma.containerItem.deleteMany({
+                        where: { id: { in: idsToDelete } },
+                    }),
+                ]
+                : []),
+            ...items
+                .filter((i) => i.id)
+                .map((i) =>
+                    prisma.containerItem.update({
+                        where: { id: i.id },
+                        data: {
+                            orderItemId: i.orderItemId,
+                            quantityAssigned: Number(i.quantityAssigned),
+                        },
+                    })
+                ),
+            ...items
+                .filter((i) => !i.id)
+                .map((i) =>
+                    prisma.containerItem.create({
+                        data: {
+                            containerId,
+                            orderItemId: i.orderItemId,
+                            quantityAssigned: Number(i.quantityAssigned),
+                        },
+                    })
+                ),
+        ]);
+    } catch {
+        return "Could not update container.";
+    }
+
+    redirect("/containers");
+}
+
+export async function deleteContainerAction(id: string) {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        throw new Error("You must be logged in.");
+    }
+
+    if (session.user.role !== "ADMIN" && session.user.role !== "MANAGER") {
+        throw new Error("You don't have permission to delete containers.");
+    }
+
+    try {
+        await prisma.container.delete({
+            where: { id },
+        });
+    } catch {
+        throw new Error("Could not delete container.");
+    }
+
+    redirect("/containers");
+}

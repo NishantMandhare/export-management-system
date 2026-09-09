@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { deleteContainerAction } from "@/lib/actions";
 
 export default async function ContainersPage() {
+    const session = await auth();
+    const canDelete =
+        session?.user?.role === "ADMIN" || session?.user?.role === "MANAGER";
     const containers = await prisma.container.findMany({
         orderBy: { createdAt: "desc" },
         include: {
@@ -42,6 +47,12 @@ export default async function ContainersPage() {
                                 <td className="p-2">{container.status}</td>
                                 <td className="p-2 space-x-3">
                                     <Link
+                                        href={`/containers/${container.id}/edit`}
+                                        className="underline"
+                                    >
+                                        Edit
+                                    </Link>
+                                    <Link
                                         href={`/containers/${container.id}/expense`}
                                         className="underline"
                                     >
@@ -59,6 +70,16 @@ export default async function ContainersPage() {
                                     >
                                         Settlement
                                     </Link>
+                                    {canDelete && (
+                                        <form
+                                            action={deleteContainerAction.bind(null, container.id)}
+                                            className="inline"
+                                        >
+                                            <button type="submit" className="underline text-destructive">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    )}
                                 </td>
                             </tr>
                         ))}
