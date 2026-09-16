@@ -51,7 +51,7 @@ export function AppSidebar() {
                                         isActive={pathname === item.url}
                                         className="h-10"
                                     >
-                                        <Link href={item.url} className="flex items-center gap-3">
+                                        <Link href={item.url} className="flex items-center gap-3 w-full">
                                             <item.icon className="size-4 shrink-0" />
                                             <span>{item.title}</span>
                                         </Link>
