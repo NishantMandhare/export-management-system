@@ -23,12 +23,12 @@ import {
 } from "@/components/ui/sidebar";
 
 const items = [
-    { title: "Dashboard", url: "/", icon: LayoutDashboard },
-    { title: "Exporters", url: "/exporters", icon: Building2 },
-    { title: "Products", url: "/products", icon: Package },
-    { title: "Orders", url: "/orders", icon: ClipboardList },
-    { title: "Containers", url: "/containers", icon: Container },
-    { title: "Users", url: "/users", icon: Users },
+    { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+    { title: "Exporters", url: "/dashboard/exporters", icon: Building2 },
+    { title: "Products", url: "/dashboard/products", icon: Package },
+    { title: "Orders", url: "/dashboard/orders", icon: ClipboardList },
+    { title: "Containers", url: "/dashboard/containers", icon: Container },
+    { title: "Users", url: "/dashboard/users", icon: Users },
 ];
 
 export function AppSidebar() {

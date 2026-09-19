@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { deleteProductAction } from "@/lib/actions";
+import { deleteOrderAction } from "@/lib/actions";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
@@ -12,69 +12,69 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Plus } from "lucide-react";
 
-export default async function ProductsPage() {
+export default async function OrdersPage() {
     const session = await auth();
     const canDelete =
         session?.user?.role === "ADMIN" || session?.user?.role === "MANAGER";
-    const products = await prisma.product.findMany({
+    const orders = await prisma.order.findMany({
         orderBy: { createdAt: "desc" },
         include: {
             exporter: true,
+            items: true,
         },
     });
 
     return (
         <div className="p-8">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold">Products</h1>
+                <h1 className="text-2xl font-bold">Orders</h1>
                 <Button asChild>
-                    <Link href="/products/new">Add Product</Link>
+                    <Link href="/dashboard/orders/new">Add Order</Link>
                 </Button>
             </div>
 
-            {products.length === 0 ? (
-                <p className="text-muted-foreground">No products yet.</p>
+            {orders.length === 0 ? (
+                <p className="text-muted-foreground">No orders yet.</p>
             ) : (
                 <div className="rounded-lg border">
                     <Table>
                         <TableHeader className="bg-muted">
                             <TableRow>
-                                <TableHead>Name</TableHead>
+                                <TableHead>Order Number</TableHead>
                                 <TableHead>Exporter</TableHead>
-                                <TableHead>Type</TableHead>
-                                <TableHead>Packing</TableHead>
-                                <TableHead>Unit</TableHead>
-                                <TableHead>Price</TableHead>
+                                <TableHead>Currency</TableHead>
+                                <TableHead>Items</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Shipping Date</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {products.map((product) => (
-                                <TableRow key={product.id}>
+                            {orders.map((order) => (
+                                <TableRow key={order.id}>
                                     <TableCell className="font-medium">
-                                        {product.name}
+                                        {order.orderNumber}
                                     </TableCell>
-                                    <TableCell>{product.exporter.companyName}</TableCell>
+                                    <TableCell>{order.exporter.companyName}</TableCell>
+                                    <TableCell>{order.currency}</TableCell>
+                                    <TableCell>{order.items.length}</TableCell>
                                     <TableCell>
-                                        <Badge variant="secondary">{product.type}</Badge>
+                                        <Badge variant="secondary">{order.status}</Badge>
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant="outline">{product.packingType}</Badge>
+                                        {order.expectedShippingDate.toLocaleDateString()}
                                     </TableCell>
-                                    <TableCell>{product.unit}</TableCell>
-                                    <TableCell>{product.defaultPrice}</TableCell>
                                     <TableCell className="text-right space-x-3">
                                         <Link
-                                            href={`/products/${product.id}/edit`}
+                                            href={`/dashboard/orders/${order.id}/edit`}
                                             className="text-sm underline"
                                         >
                                             Edit
                                         </Link>
                                         {canDelete && (
                                             <form
-                                                action={deleteProductAction.bind(null, product.id)}
+                                                action={deleteOrderAction.bind(null, order.id)}
                                                 className="inline"
                                             >
                                                 <button

@@ -11,7 +11,7 @@ export async function loginAction(
         await signIn("credentials", {
             email: formData.get("email"),
             password: formData.get("password"),
-            redirectTo: "/",
+            redirectTo: "/dashboard",
         });
     } catch (error) {
         if (error instanceof AuthError) {
@@ -57,7 +57,7 @@ export async function createExporterAction(
         },
     });
 
-    redirect("/exporters");
+    redirect("/dashboard/exporters");
 }
 
 export async function updateExporterAction(
@@ -90,7 +90,7 @@ export async function updateExporterAction(
         data: result.data,
     });
 
-    redirect("/exporters");
+    redirect("/dashboard/exporters");
 }
 
 export async function deleteExporterAction(id: string) {
@@ -108,7 +108,7 @@ export async function deleteExporterAction(id: string) {
         where: { id },
     });
 
-    redirect("/exporters");
+    redirect("/dashboard/exporters");
 }
 
 export async function createProductAction(
@@ -140,7 +140,7 @@ export async function createProductAction(
         data: result.data,
     });
 
-    redirect("/products");
+    redirect("/dashboard/products");
 }
 
 export async function updateProductAction(
@@ -174,7 +174,7 @@ export async function updateProductAction(
         data: result.data,
     });
 
-    redirect("/products");
+    redirect("/dashboard/products");
 }
 
 export async function deleteProductAction(id: string) {
@@ -192,7 +192,7 @@ export async function deleteProductAction(id: string) {
         where: { id },
     });
 
-    redirect("/products");
+    redirect("/dashboard/products");
 }
 
 export async function createOrderAction(
@@ -236,7 +236,7 @@ export async function createOrderAction(
         },
     });
 
-    redirect("/orders");
+    redirect("/dashboard/orders");
 }
 export async function createContainerAction(
     prevState: string | undefined,
@@ -278,7 +278,7 @@ export async function createContainerAction(
         },
     });
 
-    redirect("/containers");
+    redirect("/dashboard/containers");
 }
 
 export async function createContainerExpenseAction(
@@ -315,7 +315,7 @@ export async function createContainerExpenseAction(
         },
     });
 
-    redirect("/containers");
+    redirect("/dashboard/containers");
 }
 
 export async function createSalesEntryAction(
@@ -346,7 +346,7 @@ export async function createSalesEntryAction(
         },
     });
 
-    redirect(`/containers/${containerId}/sales`);
+    redirect(`/dashboard/containers/${containerId}/sales`);
 }
 
 export async function createSettlementAction(containerId: string) {
@@ -412,7 +412,7 @@ export async function createSettlementAction(containerId: string) {
         },
     });
 
-    redirect(`/containers/${containerId}/settlement`);
+    redirect(`/dashboard/containers/${containerId}/settlement`);
 }
 
 export async function updateOrderAction(
@@ -497,7 +497,7 @@ export async function updateOrderAction(
         return "Could not update order. It may be linked to a container.";
     }
 
-    redirect("/orders");
+    redirect("/dashboard/orders");
 }
 
 export async function deleteOrderAction(id: string) {
@@ -521,7 +521,7 @@ export async function deleteOrderAction(id: string) {
         );
     }
 
-    redirect("/orders");
+    redirect("/dashboard/orders");
 }
 
 export async function updateContainerAction(
@@ -608,7 +608,7 @@ export async function updateContainerAction(
         return "Could not update container.";
     }
 
-    redirect("/containers");
+    redirect("/dashboard/containers");
 }
 
 export async function deleteContainerAction(id: string) {
@@ -630,7 +630,7 @@ export async function deleteContainerAction(id: string) {
         throw new Error("Could not delete container.");
     }
 
-    redirect("/containers");
+    redirect("/dashboard/containers");
 }
 export async function createUserAction(
     prevState: string | undefined,
@@ -676,5 +676,5 @@ export async function createUserAction(
         },
     });
 
-    redirect("/users");
+    redirect("/dashboard/users");
 }

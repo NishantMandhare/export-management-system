@@ -29,7 +29,7 @@ export default async function ContainersPage() {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Containers</h1>
                 <Button asChild>
-                    <Link href="/containers/new">Add Container</Link>
+                    <Link href="/dashboard/containers/new">Add Container</Link>
                 </Button>
             </div>
 
@@ -62,25 +62,25 @@ export default async function ContainersPage() {
                                     </TableCell>
                                     <TableCell className="text-right space-x-3">
                                         <Link
-                                            href={`/containers/${container.id}/edit`}
+                                            href={`/dashboard/containers/${container.id}/edit`}
                                             className="text-sm underline"
                                         >
                                             Edit
                                         </Link>
                                         <Link
-                                            href={`/containers/${container.id}/expense`}
+                                            href={`/dashboard/containers/${container.id}/expense`}
                                             className="text-sm underline"
                                         >
                                             Expense
                                         </Link>
                                         <Link
-                                            href={`/containers/${container.id}/sales`}
+                                            href={`/dashboard/containers/${container.id}/sales`}
                                             className="text-sm underline"
                                         >
                                             Sales
                                         </Link>
                                         <Link
-                                            href={`/containers/${container.id}/settlement`}
+                                            href={`/dashboard/containers/${container.id}/settlement`}
                                             className="text-sm underline"
                                         >
                                             Settlement

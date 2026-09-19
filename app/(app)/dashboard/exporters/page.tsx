@@ -26,7 +26,7 @@ export default async function ExportersPage() {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Exporters</h1>
                 <Button asChild>
-                    <Link href="/exporters/new">Add Exporter</Link>
+                    <Link href="/dashboard/exporters/new">Add Exporter</Link>
                 </Button>
             </div>
 
@@ -55,7 +55,7 @@ export default async function ExportersPage() {
                                     <TableCell>{exporter.commissionPct}%</TableCell>
                                     <TableCell className="text-right space-x-3">
                                         <Link
-                                            href={`/exporters/${exporter.id}/edit`}
+                                            href={`/dashboard/exporters/${exporter.id}/edit`}
                                             className="text-sm underline"
                                         >
                                             Edit
